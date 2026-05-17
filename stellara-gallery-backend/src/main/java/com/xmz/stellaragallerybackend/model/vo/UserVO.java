@@ -65,4 +65,14 @@ public class UserVO implements Serializable {
      * 更新时间。
      */
     private LocalDateTime updateTime;
+
+    /**
+     * Sa-Token 请求头名称，登录接口返回给前端保存。
+     */
+    private String tokenName;
+
+    /**
+     * Sa-Token 登录凭证，前端后续请求通过同名 Header 携带。
+     */
+    private String tokenValue;
 }

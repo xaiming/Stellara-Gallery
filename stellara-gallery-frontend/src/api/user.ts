@@ -16,6 +16,8 @@ export interface UserVO {
   lastLoginTime?: string
   createTime?: string
   updateTime?: string
+  tokenName?: string
+  tokenValue?: string
 }
 
 export interface AuditLogVO {
@@ -94,11 +96,22 @@ export interface UserAddRequest {
 export const API_BASE = 'http://127.0.0.1:8123/api'
 const LOGIN_USER_STORAGE_KEY = 'stellara-login-user'
 
+export function getAuthHeaders(): HeadersInit {
+  const cachedUser = getCachedLoginUser()
+  if (!cachedUser?.tokenName || !cachedUser.tokenValue) {
+    return {}
+  }
+  return {
+    [cachedUser.tokenName]: cachedUser.tokenValue,
+  }
+}
+
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthHeaders(),
       ...options.headers,
     },
     ...options,
@@ -195,7 +208,16 @@ export function listAuditLogs(data: { current?: number; pageSize?: number }) {
 }
 
 export function cacheLoginUser(user: UserVO) {
-  localStorage.setItem(LOGIN_USER_STORAGE_KEY, JSON.stringify(user))
+  const cachedUser = getCachedLoginUser()
+  localStorage.setItem(
+    LOGIN_USER_STORAGE_KEY,
+    JSON.stringify({
+      ...cachedUser,
+      ...user,
+      tokenName: user.tokenName || cachedUser?.tokenName,
+      tokenValue: user.tokenValue || cachedUser?.tokenValue,
+    }),
+  )
 }
 
 export function getCachedLoginUser() {

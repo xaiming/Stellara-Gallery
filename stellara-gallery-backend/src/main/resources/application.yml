@@ -49,6 +49,8 @@ sa-token:
   token-style: uuid
   is-log: true
   is-read-cookie: true
+  is-read-header: true
+  is-write-header: true
 cos:
   client:
     host: ${TENCENT_COS_HOST:}

@@ -1,4 +1,4 @@
-import { API_BASE, request, type BaseResponse, type PageResult } from './user'
+import { API_BASE, getAuthHeaders, request, type BaseResponse, type PageResult } from './user'
 
 export interface PictureVO {
   id: number
@@ -76,6 +76,9 @@ async function uploadRequest<T>(path: string, formData: FormData): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
     credentials: 'include',
+    headers: {
+      ...getAuthHeaders(),
+    },
     body: formData,
   })
   const result = (await response.json()) as BaseResponse<T>

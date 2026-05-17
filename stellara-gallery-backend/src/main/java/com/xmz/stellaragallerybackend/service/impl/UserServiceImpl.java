@@ -92,7 +92,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         StpUtil.login(user.getId());
         user.setLastLoginTime(LocalDateTime.now());
         this.updateById(user);
-        return getUserVO(user);
+        UserVO userVO = getUserVO(user);
+        userVO.setTokenName(StpUtil.getTokenName());
+        userVO.setTokenValue(StpUtil.getTokenValue());
+        return userVO;
     }
 
     /**
@@ -104,7 +107,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = this.getById(userId);
         ThrowUtils.throwIf(user == null, ErrorCode.NOT_LOGIN_ERROR);
         ThrowUtils.throwIf(ObjUtil.equal(user.getUserStatus(), 1), ErrorCode.FORBIDDEN_ERROR, "用户已被禁用");
-        return getUserVO(user);
+        UserVO userVO = getUserVO(user);
+        userVO.setTokenName(StpUtil.getTokenName());
+        userVO.setTokenValue(StpUtil.getTokenValue());
+        return userVO;
     }
 
     /**
