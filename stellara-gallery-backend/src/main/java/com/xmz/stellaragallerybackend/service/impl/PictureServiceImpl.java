@@ -46,9 +46,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 /**
@@ -244,28 +241,22 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
     public Page<PictureVO> listMyFavoritePictureByPage(PictureQueryRequest pictureQueryRequest) {
         long current = pictureQueryRequest == null ? 1 : pictureQueryRequest.getCurrent();
         long pageSize = pictureQueryRequest == null ? 12 : pictureQueryRequest.getPageSize();
-        Page<PictureFavorite> favoritePage = pictureFavoriteMapper.selectPage(
-                new Page<>(current, pageSize),
-                new QueryWrapper<PictureFavorite>()
+        List<Long> pictureIds = pictureFavoriteMapper.selectList(new QueryWrapper<PictureFavorite>()
                         .eq("user_id", StpUtil.getLoginIdAsLong())
-                        .orderByDesc("create_time")
-        );
-        List<Long> pictureIds = favoritePage.getRecords().stream().map(PictureFavorite::getPictureId).toList();
-        Page<PictureVO> pictureVOPage = new Page<>(current, pageSize, favoritePage.getTotal());
+                        .orderByDesc("create_time"))
+                .stream()
+                .map(PictureFavorite::getPictureId)
+                .toList();
+        Page<PictureVO> pictureVOPage = new Page<>(current, pageSize, 0);
         if (CollUtil.isEmpty(pictureIds)) {
             pictureVOPage.setRecords(Collections.emptyList());
             return pictureVOPage;
         }
-        Map<Long, Picture> pictureMap = this.listByIds(pictureIds)
-                .stream()
-                .filter(this::isPublicVisible)
-                .collect(Collectors.toMap(Picture::getId, Function.identity()));
-        pictureVOPage.setRecords(pictureIds.stream()
-                .map(pictureMap::get)
-                .filter(ObjUtil::isNotNull)
-                .map(this::getPictureVO)
-                .toList());
-        return pictureVOPage;
+        QueryWrapper<Picture> queryWrapper = getQueryWrapper(pictureQueryRequest);
+        queryWrapper.in("id", pictureIds)
+                .eq("is_public", PUBLIC)
+                .eq("review_status", REVIEW_PASS);
+        return pageToVO(this.page(new Page<>(current, pageSize), queryWrapper));
     }
 
     /**
