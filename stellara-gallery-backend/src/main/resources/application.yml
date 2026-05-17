@@ -6,6 +6,8 @@ server:
 spring:
   application:
     name: stellara-gallery-backend
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
   servlet:
     multipart:
       max-file-size: ${STELLARA_UPLOAD_MAX_FILE_SIZE:20MB}
