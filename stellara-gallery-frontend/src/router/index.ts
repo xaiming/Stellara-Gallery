@@ -9,6 +9,8 @@ import CategoryAdminPage from '../pages/admin/CategoryAdminPage.vue'
 import TagAdminPage from '../pages/admin/TagAdminPage.vue'
 import ProfilePage from '../pages/profile/ProfilePage.vue'
 import MySpacePage from '../pages/space/MySpacePage.vue'
+import FavoritesPage from '../pages/favorites/FavoritesPage.vue'
+import ViewerPage from '../pages/viewer/ViewerPage.vue'
 import { cacheLoginUser, clearCachedLoginUser, getCachedLoginUser, getLoginUser } from '../api/user'
 
 const router = createRouter({
@@ -52,7 +54,7 @@ const router = createRouter({
         {
           path: 'favorites',
           name: 'Favorites',
-          component: PlaceholderPage,
+          component: FavoritesPage,
           meta: { title: '收藏夹', subtitle: '这里将展示收藏图片和灵感分组。' },
         },
         {
@@ -100,7 +102,7 @@ const router = createRouter({
         {
           path: 'viewer/:pictureId?',
           name: 'Viewer',
-          component: PlaceholderPage,
+          component: ViewerPage,
           meta: { title: '观赏模式', subtitle: '这里将提供沉浸式图片浏览体验。' },
         },
       ],
