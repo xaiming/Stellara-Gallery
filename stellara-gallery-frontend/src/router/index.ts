@@ -5,6 +5,8 @@ import LoginPage from '../pages/login/LoginPage.vue'
 import PlaceholderPage from '../pages/common/PlaceholderPage.vue'
 import UserAdminPage from '../pages/admin/UserAdminPage.vue'
 import PictureAdminPage from '../pages/admin/PictureAdminPage.vue'
+import CategoryAdminPage from '../pages/admin/CategoryAdminPage.vue'
+import TagAdminPage from '../pages/admin/TagAdminPage.vue'
 import ProfilePage from '../pages/profile/ProfilePage.vue'
 import MySpacePage from '../pages/space/MySpacePage.vue'
 import { cacheLoginUser, clearCachedLoginUser, getCachedLoginUser, getLoginUser } from '../api/user'
@@ -74,13 +76,13 @@ const router = createRouter({
         {
           path: 'admin/category',
           name: 'CategoryAdmin',
-          component: PlaceholderPage,
+          component: CategoryAdminPage,
           meta: { title: '分类管理', subtitle: '这里将维护图库分类体系。', requiresAdmin: true },
         },
         {
           path: 'admin/tag',
           name: 'TagAdmin',
-          component: PlaceholderPage,
+          component: TagAdminPage,
           meta: { title: '标签管理', subtitle: '这里将维护图片标签和检索关键词。', requiresAdmin: true },
         },
         {
