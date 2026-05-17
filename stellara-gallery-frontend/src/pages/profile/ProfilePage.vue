@@ -16,7 +16,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons-vue'
 import { computed, onMounted, reactive, ref } from 'vue'
-import { getLoginUser, updateUser, type UserVO } from '../../api/user'
+import { cacheLoginUser, getCachedLoginUser, getLoginUser, updateUser, type UserVO } from '../../api/user'
 
 interface ArtworkCard {
   title: string
@@ -121,10 +121,13 @@ const stats = computed(() => [
 const loadProfile = async () => {
   loading.value = true
   errorMessage.value = ''
+  currentUser.value = currentUser.value ?? getCachedLoginUser()
   try {
-    currentUser.value = await getLoginUser()
+    const loginUser = await getLoginUser()
+    currentUser.value = loginUser
+    cacheLoginUser(loginUser)
   } catch (error) {
-    currentUser.value = null
+    currentUser.value = getCachedLoginUser()
     errorMessage.value = error instanceof Error ? error.message : '个人资料加载失败'
   } finally {
     loading.value = false

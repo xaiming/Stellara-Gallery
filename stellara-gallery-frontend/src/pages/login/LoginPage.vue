@@ -11,7 +11,7 @@ import {
 } from '@ant-design/icons-vue'
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { loginUser, registerUser } from '../../api/user'
+import { cacheLoginUser, loginUser, registerUser, type UserVO } from '../../api/user'
 
 const router = useRouter()
 const mode = ref<'login' | 'register'>('login')
@@ -35,8 +35,9 @@ const handleSubmit = async () => {
   message.value = ''
   loading.value = true
   try {
+    let loginUserInfo: UserVO
     if (isLoginMode.value) {
-      await loginUser({
+      loginUserInfo = await loginUser({
         userAccount: form.userAccount,
         userPassword: form.userPassword,
       })
@@ -47,11 +48,12 @@ const handleSubmit = async () => {
         checkPassword: form.checkPassword,
         userName: form.userName,
       })
-      await loginUser({
+      loginUserInfo = await loginUser({
         userAccount: form.userAccount,
         userPassword: form.userPassword,
       })
     }
+    cacheLoginUser(loginUserInfo)
     await router.push('/gallery')
   } catch (error) {
     message.value = error instanceof Error ? error.message : '操作失败'

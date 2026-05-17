@@ -9,17 +9,19 @@ import {
 } from '@ant-design/icons-vue'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { getLoginUser, logoutUser, type UserVO } from '../api/user'
+import { cacheLoginUser, clearCachedLoginUser, getCachedLoginUser, getLoginUser, logoutUser, type UserVO } from '../api/user'
 import SidebarMenu from '../components/layout/SidebarMenu.vue'
 
 const router = useRouter()
-const currentUser = ref<UserVO | null>(null)
+const currentUser = ref<UserVO | null>(getCachedLoginUser())
 
 const loadCurrentUser = async () => {
   try {
-    currentUser.value = await getLoginUser()
+    const loginUser = await getLoginUser()
+    currentUser.value = loginUser
+    cacheLoginUser(loginUser)
   } catch {
-    currentUser.value = null
+    currentUser.value = getCachedLoginUser()
   }
 }
 
@@ -27,6 +29,7 @@ const handleLogout = async () => {
   try {
     await logoutUser()
   } finally {
+    clearCachedLoginUser()
     currentUser.value = null
     await router.push('/login')
   }

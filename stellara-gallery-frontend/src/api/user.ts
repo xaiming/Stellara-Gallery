@@ -70,6 +70,7 @@ export interface UserAddRequest {
 }
 
 const API_BASE = 'http://127.0.0.1:8123/api'
+const LOGIN_USER_STORAGE_KEY = 'stellara-login-user'
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
@@ -134,4 +135,25 @@ export function updateUser(data: UserUpdateRequest) {
     method: 'POST',
     body: JSON.stringify(data),
   })
+}
+
+export function cacheLoginUser(user: UserVO) {
+  localStorage.setItem(LOGIN_USER_STORAGE_KEY, JSON.stringify(user))
+}
+
+export function getCachedLoginUser() {
+  const rawUser = localStorage.getItem(LOGIN_USER_STORAGE_KEY)
+  if (!rawUser) {
+    return null
+  }
+  try {
+    return JSON.parse(rawUser) as UserVO
+  } catch {
+    localStorage.removeItem(LOGIN_USER_STORAGE_KEY)
+    return null
+  }
+}
+
+export function clearCachedLoginUser() {
+  localStorage.removeItem(LOGIN_USER_STORAGE_KEY)
 }
