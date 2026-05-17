@@ -1,5 +1,6 @@
 package com.xmz.stellaragallerybackend.controller;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xmz.stellaragallerybackend.common.BaseResponse;
@@ -17,7 +18,6 @@ import com.xmz.stellaragallerybackend.model.vo.UserVO;
 import com.xmz.stellaragallerybackend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -51,31 +51,31 @@ public class UserController {
 
     @Operation(summary = "用户登录")
     @PostMapping("/login")
-    public BaseResponse<UserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<UserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest) {
         ThrowUtils.throwIf(userLoginRequest == null, ErrorCode.PARAMS_ERROR);
         UserVO userVO = userService.userLogin(
                 userLoginRequest.getUserAccount(),
-                userLoginRequest.getUserPassword(),
-                request
+                userLoginRequest.getUserPassword()
         );
         return ResultUtils.success(userVO);
     }
 
     @Operation(summary = "用户退出登录")
     @PostMapping("/logout")
-    public BaseResponse<Boolean> userLogout(HttpServletRequest request) {
-        return ResultUtils.success(userService.userLogout(request));
+    public BaseResponse<Boolean> userLogout() {
+        return ResultUtils.success(userService.userLogout());
     }
 
     @Operation(summary = "获取当前登录用户")
     @GetMapping("/get/login")
-    public BaseResponse<UserVO> getLoginUser(HttpServletRequest request) {
-        return ResultUtils.success(userService.getLoginUser(request));
+    public BaseResponse<UserVO> getLoginUser() {
+        return ResultUtils.success(userService.getLoginUser());
     }
 
     @Operation(summary = "创建用户")
     @PostMapping("/add")
     public BaseResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest) {
+        StpUtil.checkRole("admin");
         ThrowUtils.throwIf(userAddRequest == null, ErrorCode.PARAMS_ERROR);
         User user = BeanUtil.copyProperties(userAddRequest, User.class);
         userService.validUser(user, true);
@@ -92,6 +92,7 @@ public class UserController {
     @Operation(summary = "删除用户")
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest) {
+        StpUtil.checkRole("admin");
         ThrowUtils.throwIf(deleteRequest == null || deleteRequest.getId() == null || deleteRequest.getId() <= 0,
                 ErrorCode.PARAMS_ERROR);
         boolean result = userService.removeById(deleteRequest.getId());
@@ -102,6 +103,7 @@ public class UserController {
     @Operation(summary = "更新用户")
     @PostMapping("/update")
     public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest) {
+        StpUtil.checkRole("admin");
         ThrowUtils.throwIf(userUpdateRequest == null || userUpdateRequest.getId() == null || userUpdateRequest.getId() <= 0,
                 ErrorCode.PARAMS_ERROR);
         User user = BeanUtil.copyProperties(userUpdateRequest, User.class);
@@ -111,9 +113,16 @@ public class UserController {
         return ResultUtils.success(true);
     }
 
+    @Operation(summary = "更新当前登录用户")
+    @PostMapping("/update/my")
+    public BaseResponse<Boolean> updateMyUser(@RequestBody UserUpdateRequest userUpdateRequest) {
+        return ResultUtils.success(userService.updateMyUser(userUpdateRequest));
+    }
+
     @Operation(summary = "根据 ID 获取用户")
     @GetMapping("/get")
     public BaseResponse<UserVO> getUserById(@RequestParam Long id) {
+        StpUtil.checkRole("admin");
         ThrowUtils.throwIf(id == null || id <= 0, ErrorCode.PARAMS_ERROR);
         User user = userService.getById(id);
         ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR);
@@ -123,6 +132,7 @@ public class UserController {
     @Operation(summary = "分页查询用户")
     @PostMapping("/list/page")
     public BaseResponse<Page<UserVO>> listUserByPage(@RequestBody UserQueryRequest userQueryRequest) {
+        StpUtil.checkRole("admin");
         long current = userQueryRequest == null ? 1 : userQueryRequest.getCurrent();
         long pageSize = userQueryRequest == null ? 10 : userQueryRequest.getPageSize();
         Page<User> userPage = userService.page(new Page<>(current, pageSize), userService.getQueryWrapper(userQueryRequest));

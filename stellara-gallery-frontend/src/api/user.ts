@@ -137,6 +137,13 @@ export function updateUser(data: UserUpdateRequest) {
   })
 }
 
+export function updateMyUser(data: Omit<UserUpdateRequest, 'id'>) {
+  return request<boolean>('/user/update/my', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
 export function cacheLoginUser(user: UserVO) {
   localStorage.setItem(LOGIN_USER_STORAGE_KEY, JSON.stringify(user))
 }

@@ -44,7 +44,7 @@ onMounted(loadCurrentUser)
 
 <template>
   <div class="basic-layout">
-    <SidebarMenu />
+    <SidebarMenu :current-user="currentUser" />
 
     <section class="layout-shell">
       <header class="top-header glass-panel">

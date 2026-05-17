@@ -16,7 +16,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons-vue'
 import { computed, onMounted, reactive, ref } from 'vue'
-import { cacheLoginUser, getCachedLoginUser, getLoginUser, updateUser, type UserVO } from '../../api/user'
+import { cacheLoginUser, getCachedLoginUser, getLoginUser, updateMyUser, type UserVO } from '../../api/user'
 
 interface ArtworkCard {
   title: string
@@ -152,8 +152,7 @@ const submitProfile = async () => {
   saving.value = true
   errorMessage.value = ''
   try {
-    await updateUser({
-      id: currentUser.value.id,
+    await updateMyUser({
       userName: editForm.userName.trim() || undefined,
       userAvatar: editForm.userAvatar.trim() || undefined,
       userCover: editForm.userCover.trim() || undefined,

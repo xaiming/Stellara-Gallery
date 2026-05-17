@@ -1,5 +1,6 @@
 package com.xmz.stellaragallerybackend.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
@@ -11,10 +12,10 @@ import com.xmz.stellaragallerybackend.constant.UserConstant;
 import com.xmz.stellaragallerybackend.exception.ThrowUtils;
 import com.xmz.stellaragallerybackend.mapper.UserMapper;
 import com.xmz.stellaragallerybackend.model.dto.user.UserQueryRequest;
+import com.xmz.stellaragallerybackend.model.dto.user.UserUpdateRequest;
 import com.xmz.stellaragallerybackend.model.entity.User;
 import com.xmz.stellaragallerybackend.model.vo.UserVO;
 import com.xmz.stellaragallerybackend.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -45,7 +46,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public UserVO userLogin(String userAccount, String userPassword, HttpServletRequest request) {
+    public UserVO userLogin(String userAccount, String userPassword) {
         ThrowUtils.throwIf(StrUtil.hasBlank(userAccount, userPassword), ErrorCode.PARAMS_ERROR, "参数为空");
         ThrowUtils.throwIf(userAccount.length() < 4, ErrorCode.PARAMS_ERROR, "用户账号错误");
         ThrowUtils.throwIf(userPassword.length() < 8, ErrorCode.PARAMS_ERROR, "用户密码错误");
@@ -58,15 +59,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         ThrowUtils.throwIf(user == null, ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         ThrowUtils.throwIf(ObjUtil.equal(user.getUserStatus(), 1), ErrorCode.FORBIDDEN_ERROR, "用户已被禁用");
 
-        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user.getId());
+        StpUtil.login(user.getId());
         return getUserVO(user);
     }
 
     @Override
-    public UserVO getLoginUser(HttpServletRequest request) {
-        Object userIdObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
-        ThrowUtils.throwIf(userIdObj == null, ErrorCode.NOT_LOGIN_ERROR);
-        Long userId = Long.valueOf(String.valueOf(userIdObj));
+    public UserVO getLoginUser() {
+        Long userId = StpUtil.getLoginIdAsLong();
         User user = this.getById(userId);
         ThrowUtils.throwIf(user == null, ErrorCode.NOT_LOGIN_ERROR);
         ThrowUtils.throwIf(ObjUtil.equal(user.getUserStatus(), 1), ErrorCode.FORBIDDEN_ERROR, "用户已被禁用");
@@ -74,8 +73,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public boolean userLogout(HttpServletRequest request) {
-        request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
+    public boolean userLogout() {
+        StpUtil.logout();
+        return true;
+    }
+
+    @Override
+    public boolean updateMyUser(UserUpdateRequest userUpdateRequest) {
+        ThrowUtils.throwIf(userUpdateRequest == null, ErrorCode.PARAMS_ERROR);
+        Long loginUserId = StpUtil.getLoginIdAsLong();
+        User user = new User();
+        user.setId(loginUserId);
+        user.setUserName(userUpdateRequest.getUserName());
+        user.setUserAvatar(userUpdateRequest.getUserAvatar());
+        user.setUserCover(userUpdateRequest.getUserCover());
+        user.setUserProfile(userUpdateRequest.getUserProfile());
+        boolean result = this.updateById(user);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return true;
     }
 

@@ -3,9 +3,9 @@ package com.xmz.stellaragallerybackend.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xmz.stellaragallerybackend.model.dto.user.UserQueryRequest;
+import com.xmz.stellaragallerybackend.model.dto.user.UserUpdateRequest;
 import com.xmz.stellaragallerybackend.model.entity.User;
 import com.xmz.stellaragallerybackend.model.vo.UserVO;
-import jakarta.servlet.http.HttpServletRequest;
 
 public interface UserService extends IService<User> {
 
@@ -19,11 +19,13 @@ public interface UserService extends IService<User> {
      */
     long userRegister(String userAccount, String userPassword, String checkPassword, String userName);
 
-    UserVO userLogin(String userAccount, String userPassword, HttpServletRequest request);
+    UserVO userLogin(String userAccount, String userPassword);
 
-    UserVO getLoginUser(HttpServletRequest request);
+    UserVO getLoginUser();
 
-    boolean userLogout(HttpServletRequest request);
+    boolean userLogout();
+
+    boolean updateMyUser(UserUpdateRequest userUpdateRequest);
 
     String getEncryptPassword(String userPassword);
 

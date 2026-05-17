@@ -25,3 +25,12 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
+sa-token:
+  token-name: stellara_token
+  timeout: 2592000
+  active-timeout: 604800
+  is-concurrent: true
+  is-share: true
+  token-style: uuid
+  is-log: true
+  is-read-cookie: true

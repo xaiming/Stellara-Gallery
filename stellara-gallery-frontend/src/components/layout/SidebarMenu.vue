@@ -16,9 +16,13 @@ import {
 } from '@ant-design/icons-vue'
 import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import type { UserVO } from '../../api/user'
 import moonLogo from '../../assets/stellara-moon-logo.png'
 
 const route = useRoute()
+const props = defineProps<{
+  currentUser?: UserVO | null
+}>()
 
 const menuItems = [
   { title: '公共图库', path: '/gallery', icon: HomeOutlined },
@@ -26,13 +30,18 @@ const menuItems = [
   { title: '星域空间', path: '/space/team', icon: TeamOutlined },
   { title: '收藏夹', path: '/favorites', icon: HeartOutlined },
   { title: '回收站', path: '/recycle', icon: DeleteOutlined },
-  { title: '用户管理', path: '/admin/user', icon: UserOutlined },
-  { title: '图片管理', path: '/admin/picture', icon: PictureOutlined },
-  { title: '分类管理', path: '/admin/category', icon: AppstoreOutlined },
-  { title: '标签管理', path: '/admin/tag', icon: TagsOutlined },
-  { title: '空间管理', path: '/admin/space', icon: DatabaseOutlined },
-  { title: '系统设置', path: '/admin/settings', icon: SettingOutlined },
+  { title: '用户管理', path: '/admin/user', icon: UserOutlined, adminOnly: true },
+  { title: '图片管理', path: '/admin/picture', icon: PictureOutlined, adminOnly: true },
+  { title: '分类管理', path: '/admin/category', icon: AppstoreOutlined, adminOnly: true },
+  { title: '标签管理', path: '/admin/tag', icon: TagsOutlined, adminOnly: true },
+  { title: '空间管理', path: '/admin/space', icon: DatabaseOutlined, adminOnly: true },
+  { title: '系统设置', path: '/admin/settings', icon: SettingOutlined, adminOnly: true },
 ]
+
+const visibleMenuItems = computed(() => {
+  const isAdmin = props.currentUser?.userRole === 'admin'
+  return menuItems.filter((item) => !item.adminOnly || isAdmin)
+})
 
 const isActive = (path: string) => computed(() => route.path === path)
 </script>
@@ -51,7 +60,7 @@ const isActive = (path: string) => computed(() => route.path === path)
 
     <nav class="sidebar-nav" aria-label="主菜单">
       <RouterLink
-        v-for="item in menuItems"
+        v-for="item in visibleMenuItems"
         :key="item.path"
         :class="['menu-item', { active: isActive(item.path).value }]"
         :to="item.path"
