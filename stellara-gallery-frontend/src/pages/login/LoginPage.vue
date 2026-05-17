@@ -10,10 +10,11 @@ import {
   WechatOutlined,
 } from '@ant-design/icons-vue'
 import { computed, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { cacheLoginUser, loginUser, registerUser, type UserVO } from '../../api/user'
 
 const router = useRouter()
+const route = useRoute()
 const mode = ref<'login' | 'register'>('login')
 const loading = ref(false)
 const message = ref('')
@@ -54,7 +55,8 @@ const handleSubmit = async () => {
       })
     }
     cacheLoginUser(loginUserInfo)
-    await router.push('/gallery')
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/gallery'
+    await router.push(redirect)
   } catch (error) {
     message.value = error instanceof Error ? error.message : '操作失败'
   } finally {

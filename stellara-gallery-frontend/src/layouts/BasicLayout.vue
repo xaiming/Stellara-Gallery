@@ -16,12 +16,18 @@ const router = useRouter()
 const currentUser = ref<UserVO | null>(getCachedLoginUser())
 
 const loadCurrentUser = async () => {
+  const cachedUser = getCachedLoginUser()
+  if (!cachedUser) {
+    currentUser.value = null
+    return
+  }
   try {
     const loginUser = await getLoginUser()
     currentUser.value = loginUser
     cacheLoginUser(loginUser)
   } catch {
-    currentUser.value = getCachedLoginUser()
+    clearCachedLoginUser()
+    currentUser.value = null
   }
 }
 
@@ -36,6 +42,10 @@ const handleLogout = async () => {
 }
 
 const goProfile = () => {
+  if (!currentUser.value) {
+    router.push('/login?redirect=/profile')
+    return
+  }
   router.push('/profile')
 }
 

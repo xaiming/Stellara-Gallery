@@ -18,6 +18,7 @@ import {
   toggleLike,
   type PictureVO,
 } from '../../api/picture'
+import { getCachedLoginUser } from '../../api/user'
 
 const route = useRoute()
 const router = useRouter()
@@ -62,8 +63,18 @@ const switchPicture = (delta: number) => {
   router.push(`/viewer/${next.id}`)
 }
 
+const ensureLogin = () => {
+  if (getCachedLoginUser()) {
+    return true
+  }
+  message.value = '请先登录后再点赞或收藏'
+  router.push(`/login?redirect=${encodeURIComponent(route.fullPath)}`)
+  return false
+}
+
 const handleLike = async () => {
   if (!activePicture.value) return
+  if (!ensureLogin()) return
   try {
     const liked = await toggleLike(activePicture.value.id)
     activePicture.value.liked = liked
@@ -75,6 +86,7 @@ const handleLike = async () => {
 
 const handleFavorite = async () => {
   if (!activePicture.value) return
+  if (!ensureLogin()) return
   try {
     const favorited = await toggleFavorite(activePicture.value.id)
     activePicture.value.favorited = favorited

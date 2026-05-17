@@ -37,31 +37,31 @@ const router = createRouter({
           path: 'profile',
           name: 'Profile',
           component: ProfilePage,
-          meta: { title: '个人主页' },
+          meta: { title: '个人主页', requiresLogin: true },
         },
         {
           path: 'space/my',
           name: 'MySpace',
           component: MySpacePage,
-          meta: { title: '我的空间', subtitle: '这里将展示个人空间、私有图片和创作合集。' },
+          meta: { title: '我的空间', subtitle: '这里将展示个人空间、私有图片和创作合集。', requiresLogin: true },
         },
         {
           path: 'space/team',
           name: 'TeamSpace',
           component: PlaceholderPage,
-          meta: { title: '星域空间', subtitle: '这里将展示团队空间和协作图库。' },
+          meta: { title: '星域空间', subtitle: '这里将展示团队空间和协作图库。', requiresLogin: true },
         },
         {
           path: 'favorites',
           name: 'Favorites',
           component: FavoritesPage,
-          meta: { title: '收藏夹', subtitle: '这里将展示收藏图片和灵感分组。' },
+          meta: { title: '收藏夹', subtitle: '这里将展示收藏图片和灵感分组。', requiresLogin: true },
         },
         {
           path: 'recycle',
           name: 'Recycle',
           component: PlaceholderPage,
-          meta: { title: '回收站', subtitle: '这里将管理已删除图片的恢复与清理。' },
+          meta: { title: '回收站', subtitle: '这里将管理已删除图片的恢复与清理。', requiresLogin: true },
         },
         {
           path: 'admin/user',
@@ -111,11 +111,19 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  if (!to.matched.some((record) => record.meta.requiresAdmin)) {
+  const requiresLogin = to.matched.some((record) => record.meta.requiresLogin)
+  const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin)
+  if (!requiresLogin && !requiresAdmin) {
     return true
   }
   const cachedUser = getCachedLoginUser()
-  if (cachedUser?.userRole === 'admin') {
+  if (requiresLogin && !requiresAdmin && !cachedUser) {
+    return `/login?redirect=${encodeURIComponent(to.fullPath)}`
+  }
+  if (requiresLogin && !requiresAdmin && cachedUser) {
+    return true
+  }
+  if (requiresAdmin && cachedUser?.userRole === 'admin') {
     return true
   }
   try {
@@ -124,7 +132,7 @@ router.beforeEach(async (to) => {
     return loginUser.userRole === 'admin' ? true : '/gallery'
   } catch {
     clearCachedLoginUser()
-    return '/login'
+    return `/login?redirect=${encodeURIComponent(to.fullPath)}`
   }
 })
 

@@ -11,6 +11,7 @@ import {
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { listEnabledCategories, type CategoryVO } from '../../api/category'
+import { getCachedLoginUser } from '../../api/user'
 import {
   listPublicPictures,
   toggleFavorite,
@@ -87,6 +88,22 @@ const loadPictures = async () => {
   }
 }
 
+const ensureLogin = () => {
+  if (getCachedLoginUser()) {
+    return true
+  }
+  message.value = '请先登录后再使用上传、点赞和收藏'
+  router.push(`/login?redirect=${encodeURIComponent(router.currentRoute.value.fullPath)}`)
+  return false
+}
+
+const openUploadModal = () => {
+  if (!ensureLogin()) {
+    return
+  }
+  uploadVisible.value = true
+}
+
 const applyFilter = () => {
   query.current = 1
   loadPictures()
@@ -145,6 +162,9 @@ const resetUploadForm = () => {
 }
 
 const submitUpload = async () => {
+  if (!ensureLogin()) {
+    return
+  }
   if (!uploadForm.file) {
     message.value = '请先选择图片'
     return
@@ -176,6 +196,9 @@ const submitUpload = async () => {
 }
 
 const handleLike = async (picture: PictureVO) => {
+  if (!ensureLogin()) {
+    return
+  }
   try {
     const liked = await toggleLike(picture.id)
     picture.liked = liked
@@ -186,6 +209,9 @@ const handleLike = async (picture: PictureVO) => {
 }
 
 const handleFavorite = async (picture: PictureVO) => {
+  if (!ensureLogin()) {
+    return
+  }
   try {
     const favorited = await toggleFavorite(picture.id)
     picture.favorited = favorited
@@ -213,7 +239,7 @@ onMounted(async () => {
         <h2>星璃公共图库 ✨</h2>
         <p>在星光、云海与创作者灵感之间，发现已审核通过的公开作品。</p>
         <div class="hero-actions">
-          <button class="primary-action" type="button" @click="uploadVisible = true">
+          <button class="primary-action" type="button" @click="openUploadModal">
             <CloudUploadOutlined />
             上传图片
           </button>
@@ -282,7 +308,7 @@ onMounted(async () => {
     <p v-if="message" class="page-message">{{ message }}</p>
 
     <div v-if="loading" class="empty-panel glass-panel">星光加载中...</div>
-    <div v-else-if="!pictures.length" class="empty-panel glass-panel">暂时没有公开作品，去上传第一张星璃图片吧。</div>
+    <div v-else-if="!pictures.length" class="empty-panel glass-panel">暂时没有公开作品，登录后可以上传第一张星璃图片。</div>
     <div v-else class="picture-grid">
       <article v-for="picture in pictures" :key="picture.id" class="picture-card" @click="openViewer(picture.id)">
         <div class="picture-cover">

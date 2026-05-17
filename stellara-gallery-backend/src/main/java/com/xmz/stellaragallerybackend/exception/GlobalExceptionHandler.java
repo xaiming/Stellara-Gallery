@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(NotLoginException.class)
     public BaseResponse<?> notLoginExceptionHandler(NotLoginException e) {
-        log.error("NotLoginException", e);
+        log.warn("NotLoginException: {}", e.getMessage());
         return ResultUtils.error(ErrorCode.NOT_LOGIN_ERROR, ErrorCode.NOT_LOGIN_ERROR.getMessage());
     }
 
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(NotRoleException.class)
     public BaseResponse<?> notRoleExceptionHandler(NotRoleException e) {
-        log.error("NotRoleException", e);
+        log.warn("NotRoleException: {}", e.getMessage());
         return ResultUtils.error(ErrorCode.NO_AUTH_ERROR, ErrorCode.NO_AUTH_ERROR.getMessage());
     }
 
