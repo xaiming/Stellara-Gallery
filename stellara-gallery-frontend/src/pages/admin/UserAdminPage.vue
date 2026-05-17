@@ -18,7 +18,17 @@ import {
   UserOutlined,
 } from '@ant-design/icons-vue'
 import { computed, onMounted, reactive, ref } from 'vue'
-import { addUser, getUserById, listUsersByPage, updateUser, type UserVO } from '../../api/user'
+import {
+  addUser,
+  deleteUser,
+  getUserById,
+  listAuditLogs,
+  listUsersByPage,
+  resetUserPassword,
+  updateUser,
+  type AuditLogVO,
+  type UserVO,
+} from '../../api/user'
 
 type RoleFilter = 'all' | 'user' | 'admin'
 type StatusFilter = 'all' | 0 | 1
@@ -51,6 +61,11 @@ const editModalOpen = ref(false)
 const detailLoading = ref(false)
 const editing = ref(false)
 const currentDetail = ref<UserVO | null>(null)
+const noticeMessage = ref('')
+const auditModalOpen = ref(false)
+const auditLoading = ref(false)
+const auditLogs = ref<AuditLogVO[]>([])
+const auditTotal = ref(0)
 const addForm = reactive({
   userAccount: '',
   userPassword: '',
@@ -77,13 +92,7 @@ const buildQuery = () => {
     sortOrder: 'descend',
   }
   if (keyword) {
-    if (/^\d+$/.test(keyword)) {
-      query.id = Number(keyword)
-    } else if (/^[a-zA-Z0-9_@.-]+$/.test(keyword)) {
-      query.userAccount = keyword
-    } else {
-      query.userName = keyword
-    }
+    query.keyword = keyword
   }
   if (roleFilter.value !== 'all') {
     query.userRole = roleFilter.value
@@ -161,6 +170,14 @@ const getDisplayName = (user: UserVO) => user.userName || user.userAccount || `�
 const getRoleText = (role?: string) => (role === 'admin' ? '管理员' : '普通用户')
 const getStatusText = (status?: number) => (status === 1 ? '禁用' : '正常')
 const getAura = (index: number) => avatarAuras[index % avatarAuras.length]
+const showNotice = (message: string) => {
+  noticeMessage.value = message
+  window.setTimeout(() => {
+    if (noticeMessage.value === message) {
+      noticeMessage.value = ''
+    }
+  }, 2600)
+}
 
 const applyFilters = async () => {
   current.value = 1
@@ -174,12 +191,17 @@ const changePage = async (page: number) => {
 }
 
 const toggleUserStatus = async (user: UserVO) => {
+  const nextStatus = user.userStatus === 1 ? '启用' : '禁用'
+  if (!window.confirm(`确认${nextStatus}用户「${getDisplayName(user)}」吗？`)) {
+    return
+  }
   await updateUser({
     id: user.id,
     userStatus: user.userStatus === 1 ? 0 : 1,
   })
   await fetchUsers()
   await fetchStats()
+  showNotice(`${nextStatus}用户成功`)
 }
 
 const resetAddForm = () => {
@@ -206,6 +228,7 @@ const submitAddUser = async () => {
     current.value = 1
     await fetchUsers()
     await fetchStats()
+    showNotice('新增用户成功')
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '新增用户失败'
   } finally {
@@ -264,6 +287,7 @@ const submitEditUser = async () => {
     editModalOpen.value = false
     await fetchUsers()
     await fetchStats()
+    showNotice('编辑用户成功')
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '编辑用户失败'
   } finally {
@@ -271,11 +295,55 @@ const submitEditUser = async () => {
   }
 }
 
+const handleDeleteUser = async (user: UserVO) => {
+  if (!window.confirm(`确认删除用户「${getDisplayName(user)}」吗？该操作会进入逻辑删除。`)) {
+    return
+  }
+  try {
+    await deleteUser(user.id)
+    await fetchUsers()
+    await fetchStats()
+    showNotice('删除用户成功')
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '删除用户失败'
+  }
+}
+
+const handleResetPassword = async (user: UserVO) => {
+  const newPassword = window.prompt(`请输入用户「${getDisplayName(user)}」的新密码（至少 8 位）`)
+  if (!newPassword) {
+    return
+  }
+  try {
+    await resetUserPassword({ id: user.id, newPassword })
+    showNotice('重置密码成功')
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '重置密码失败'
+  }
+}
+
+const openAuditLogs = async () => {
+  auditModalOpen.value = true
+  auditLoading.value = true
+  errorMessage.value = ''
+  try {
+    const page = await listAuditLogs({ current: 1, pageSize: 12 })
+    auditLogs.value = page.records ?? []
+    auditTotal.value = Number(page.total ?? 0)
+  } catch (error) {
+    auditLogs.value = []
+    auditTotal.value = 0
+    errorMessage.value = error instanceof Error ? error.message : '审计日志加载失败'
+  } finally {
+    auditLoading.value = false
+  }
+}
+
 const quickActions = [
   { title: '创建用户', desc: '快速创建新用户账号', icon: UserAddOutlined },
   { title: '批量导出', desc: '导出用户明细到文件', icon: FolderAddOutlined },
   { title: '发送通知', desc: '向用户发送系统通知', icon: SendOutlined },
-  { title: '查看日志', desc: '查看用户操作日志', icon: FileTextOutlined },
+  { title: '查看日志', desc: '查看用户操作日志', icon: FileTextOutlined, action: openAuditLogs },
 ]
 
 onMounted(async () => {
@@ -286,6 +354,8 @@ onMounted(async () => {
 
 <template>
   <section class="user-admin-page">
+    <div v-if="noticeMessage" class="notice-toast">{{ noticeMessage }}</div>
+
     <header class="user-hero">
       <div class="hero-copy">
         <h2>用户管理 ✨</h2>
@@ -391,6 +461,8 @@ onMounted(async () => {
                       {{ user.userStatus === 1 ? '启用' : '禁用' }}
                       <MoreOutlined />
                     </button>
+                    <button @click="handleResetPassword(user)">重置密码</button>
+                    <button class="danger" @click="handleDeleteUser(user)">删除</button>
                   </div>
                 </td>
               </tr>
@@ -466,7 +538,7 @@ onMounted(async () => {
           <div class="card-title">
             <h3>快捷操作 ✨</h3>
           </div>
-          <button v-for="action in quickActions" :key="action.title" class="quick-action">
+          <button v-for="action in quickActions" :key="action.title" class="quick-action" @click="action.action?.()">
             <component :is="action.icon" />
             <span>
               <strong>{{ action.title }}</strong>
@@ -607,6 +679,28 @@ onMounted(async () => {
         </template>
       </form>
     </div>
+
+    <div v-if="auditModalOpen" class="modal-mask">
+      <section class="user-modal audit-modal">
+        <div class="modal-title">
+          <div>
+            <h3>操作审计 ✨</h3>
+            <p>共 {{ auditTotal }} 条用户模块操作记录</p>
+          </div>
+          <button type="button" @click="auditModalOpen = false">×</button>
+        </div>
+        <div v-if="auditLoading" class="table-state">正在加载审计日志...</div>
+        <p v-else-if="errorMessage" class="modal-error">{{ errorMessage }}</p>
+        <div v-else-if="auditLogs.length" class="audit-list">
+          <article v-for="log in auditLogs" :key="log.id">
+            <strong>{{ log.action }}</strong>
+            <span>{{ log.detail || '暂无说明' }}</span>
+            <small>操作者：{{ log.operatorAccount || log.operatorId || '-' }} / 目标用户：{{ log.targetUserId || '-' }} / {{ formatTime(log.createTime) }}</small>
+          </article>
+        </div>
+        <div v-else class="table-state">暂无审计日志</div>
+      </section>
+    </div>
   </section>
 </template>
 
@@ -637,6 +731,22 @@ onMounted(async () => {
     linear-gradient(115deg, transparent 0 64%, rgba(255, 255, 255, 0.48) 64.1%, transparent 64.5%);
   background-size: 92px 92px, 100% 100%;
   opacity: 0.52;
+}
+
+.notice-toast {
+  position: fixed;
+  z-index: 40;
+  top: 96px;
+  left: 50%;
+  padding: 10px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  border-radius: 999px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #5f78ff, #df82ff);
+  box-shadow: 0 14px 34px rgba(88, 78, 190, 0.32);
+  font-size: 13px;
+  font-weight: 900;
+  transform: translateX(-50%);
 }
 
 .user-hero,
@@ -1033,6 +1143,11 @@ onMounted(async () => {
   background: rgba(103, 219, 159, 0.16);
 }
 
+.table-actions .danger {
+  color: #d34d78;
+  background: rgba(255, 139, 178, 0.16);
+}
+
 .table-state {
   display: grid;
   min-height: 180px;
@@ -1396,6 +1511,47 @@ onMounted(async () => {
 
 .detail-modal {
   width: min(500px, calc(100vw - 48px));
+}
+
+.audit-modal {
+  width: min(720px, calc(100vw - 48px));
+}
+
+.audit-list {
+  display: grid;
+  max-height: 520px;
+  gap: 10px;
+  overflow: auto;
+}
+
+.audit-list article {
+  padding: 12px 14px;
+  border: 1px solid rgba(124, 122, 218, 0.16);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.audit-list strong,
+.audit-list span,
+.audit-list small {
+  display: block;
+}
+
+.audit-list strong {
+  color: #29369c;
+  font-size: 14px;
+}
+
+.audit-list span {
+  margin-top: 4px;
+  color: #5662ae;
+  font-size: 13px;
+}
+
+.audit-list small {
+  margin-top: 6px;
+  color: #7880be;
+  font-size: 12px;
 }
 
 .detail-profile {

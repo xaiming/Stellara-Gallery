@@ -12,8 +12,14 @@ import java.util.Map;
 
 @Tag(name = "系统接口")
 @RestController
+/**
+ * 系统基础接口。
+ */
 public class HealthController {
 
+    /**
+     * 健康检查接口，用于确认后端服务是否正常启动。
+     */
     @Operation(summary = "健康检查")
     @GetMapping("/health")
     public BaseResponse<Map<String, Object>> health() {

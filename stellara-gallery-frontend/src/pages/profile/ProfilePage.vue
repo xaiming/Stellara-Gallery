@@ -16,7 +16,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons-vue'
 import { computed, onMounted, reactive, ref } from 'vue'
-import { cacheLoginUser, getCachedLoginUser, getLoginUser, updateMyUser, type UserVO } from '../../api/user'
+import { cacheLoginUser, changeMyPassword, getCachedLoginUser, getLoginUser, updateMyUser, type UserVO } from '../../api/user'
 
 interface ArtworkCard {
   title: string
@@ -35,14 +35,22 @@ interface ActivityItem {
 const currentUser = ref<UserVO | null>(null)
 const loading = ref(false)
 const saving = ref(false)
+const changingPassword = ref(false)
 const editModalOpen = ref(false)
+const passwordModalOpen = ref(false)
 const errorMessage = ref('')
+const noticeMessage = ref('')
 
 const editForm = reactive({
   userName: '',
   userAvatar: '',
   userCover: '',
   userProfile: '',
+})
+const passwordForm = reactive({
+  oldPassword: '',
+  newPassword: '',
+  checkPassword: '',
 })
 
 const artworks: ArtworkCard[] = [
@@ -167,6 +175,36 @@ const submitProfile = async () => {
   }
 }
 
+const showNotice = (message: string) => {
+  noticeMessage.value = message
+  window.setTimeout(() => {
+    if (noticeMessage.value === message) {
+      noticeMessage.value = ''
+    }
+  }, 2600)
+}
+
+const resetPasswordForm = () => {
+  passwordForm.oldPassword = ''
+  passwordForm.newPassword = ''
+  passwordForm.checkPassword = ''
+}
+
+const submitPassword = async () => {
+  changingPassword.value = true
+  errorMessage.value = ''
+  try {
+    await changeMyPassword({ ...passwordForm })
+    passwordModalOpen.value = false
+    resetPasswordForm()
+    showNotice('密码修改成功')
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '密码修改失败'
+  } finally {
+    changingPassword.value = false
+  }
+}
+
 const formatTime = (value?: string) => (value ? value.replace('T', ' ').slice(0, 16) : '暂无记录')
 
 onMounted(loadProfile)
@@ -174,6 +212,8 @@ onMounted(loadProfile)
 
 <template>
   <section class="profile-page">
+    <div v-if="noticeMessage" class="notice-toast">{{ noticeMessage }}</div>
+
     <header class="profile-hero" :style="coverStyle">
       <div class="hero-skyline" aria-hidden="true">
         <span class="tower tower-a" />
@@ -319,6 +359,7 @@ onMounted(loadProfile)
             <button><PictureOutlined /> 管理作品</button>
             <button><HeartOutlined /> 查看收藏</button>
             <button><TeamOutlined /> 团队空间</button>
+            <button @click="passwordModalOpen = true; errorMessage = ''"><UserOutlined /> 修改密码</button>
           </section>
         </aside>
       </div>
@@ -360,6 +401,38 @@ onMounted(loadProfile)
         </div>
       </form>
     </div>
+
+    <div v-if="passwordModalOpen" class="modal-mask">
+      <form class="profile-modal" @submit.prevent="submitPassword">
+        <div class="modal-title">
+          <div>
+            <h3>修改密码 ✨</h3>
+            <p>输入旧密码后设置一个新的登录密码</p>
+          </div>
+          <button type="button" @click="passwordModalOpen = false">×</button>
+        </div>
+        <label>
+          <span>旧密码</span>
+          <input v-model="passwordForm.oldPassword" required minlength="8" type="password" placeholder="请输入旧密码" />
+        </label>
+        <label>
+          <span>新密码</span>
+          <input v-model="passwordForm.newPassword" required minlength="8" type="password" placeholder="至少 8 位" />
+        </label>
+        <label>
+          <span>确认新密码</span>
+          <input v-model="passwordForm.checkPassword" required minlength="8" type="password" placeholder="请再次输入新密码" />
+        </label>
+        <p v-if="errorMessage" class="modal-error">{{ errorMessage }}</p>
+        <div class="modal-actions">
+          <button type="button" class="ghost-action" @click="passwordModalOpen = false">取消</button>
+          <button type="submit" class="primary-action" :disabled="changingPassword">
+            <SaveOutlined />
+            {{ changingPassword ? '保存中...' : '确认修改' }}
+          </button>
+        </div>
+      </form>
+    </div>
   </section>
 </template>
 
@@ -390,6 +463,22 @@ onMounted(loadProfile)
   background-position: 18px 24px, 82px 68px;
   background-size: 88px 88px, 130px 130px;
   opacity: 0.48;
+}
+
+.notice-toast {
+  position: fixed;
+  z-index: 40;
+  top: 96px;
+  left: 50%;
+  padding: 10px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  border-radius: 999px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #5f78ff, #df82ff);
+  box-shadow: 0 14px 34px rgba(88, 78, 190, 0.32);
+  font-size: 13px;
+  font-weight: 900;
+  transform: translateX(-50%);
 }
 
 .profile-hero,

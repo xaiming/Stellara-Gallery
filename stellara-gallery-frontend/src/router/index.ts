@@ -5,6 +5,7 @@ import LoginPage from '../pages/login/LoginPage.vue'
 import PlaceholderPage from '../pages/common/PlaceholderPage.vue'
 import UserAdminPage from '../pages/admin/UserAdminPage.vue'
 import ProfilePage from '../pages/profile/ProfilePage.vue'
+import { cacheLoginUser, clearCachedLoginUser, getCachedLoginUser, getLoginUser } from '../api/user'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -60,37 +61,37 @@ const router = createRouter({
           path: 'admin/user',
           name: 'UserAdmin',
           component: UserAdminPage,
-          meta: { title: '用户管理', subtitle: '管理平台用户、角色、状态与空间信息' },
+          meta: { title: '用户管理', subtitle: '管理平台用户、角色、状态与空间信息', requiresAdmin: true },
         },
         {
           path: 'admin/picture',
           name: 'PictureAdmin',
           component: PlaceholderPage,
-          meta: { title: '图片管理', subtitle: '这里将提供图片审核、编辑和批量管理入口。' },
+          meta: { title: '图片管理', subtitle: '这里将提供图片审核、编辑和批量管理入口。', requiresAdmin: true },
         },
         {
           path: 'admin/category',
           name: 'CategoryAdmin',
           component: PlaceholderPage,
-          meta: { title: '分类管理', subtitle: '这里将维护图库分类体系。' },
+          meta: { title: '分类管理', subtitle: '这里将维护图库分类体系。', requiresAdmin: true },
         },
         {
           path: 'admin/tag',
           name: 'TagAdmin',
           component: PlaceholderPage,
-          meta: { title: '标签管理', subtitle: '这里将维护图片标签和检索关键词。' },
+          meta: { title: '标签管理', subtitle: '这里将维护图片标签和检索关键词。', requiresAdmin: true },
         },
         {
           path: 'admin/space',
           name: 'SpaceAdmin',
           component: PlaceholderPage,
-          meta: { title: '空间管理', subtitle: '这里将管理用户空间、容量和权限。' },
+          meta: { title: '空间管理', subtitle: '这里将管理用户空间、容量和权限。', requiresAdmin: true },
         },
         {
           path: 'admin/settings',
           name: 'SystemSettings',
           component: PlaceholderPage,
-          meta: { title: '系统设置', subtitle: '这里将配置站点基础信息与系统参数。' },
+          meta: { title: '系统设置', subtitle: '这里将配置站点基础信息与系统参数。', requiresAdmin: true },
         },
         {
           path: 'viewer',
@@ -101,6 +102,24 @@ const router = createRouter({
       ],
     },
   ],
+})
+
+router.beforeEach(async (to) => {
+  if (!to.matched.some((record) => record.meta.requiresAdmin)) {
+    return true
+  }
+  const cachedUser = getCachedLoginUser()
+  if (cachedUser?.userRole === 'admin') {
+    return true
+  }
+  try {
+    const loginUser = await getLoginUser()
+    cacheLoginUser(loginUser)
+    return loginUser.userRole === 'admin' ? true : '/gallery'
+  } catch {
+    clearCachedLoginUser()
+    return '/login'
+  }
 })
 
 export default router

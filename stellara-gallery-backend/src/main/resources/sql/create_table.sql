@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS user;
+DROP TABLE IF EXISTS audit_log;
 
 CREATE TABLE user (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '用户ID',
@@ -25,3 +26,20 @@ CREATE TABLE user (
     KEY idx_user_status (user_status),
     KEY idx_create_time (create_time)
 ) COMMENT='用户表';
+
+CREATE TABLE audit_log (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '日志ID',
+
+    operator_id BIGINT DEFAULT NULL COMMENT '操作人用户ID',
+    operator_account VARCHAR(64) DEFAULT NULL COMMENT '操作人账号',
+    target_user_id BIGINT DEFAULT NULL COMMENT '被操作用户ID',
+    action VARCHAR(64) NOT NULL COMMENT '操作类型',
+    detail VARCHAR(512) DEFAULT NULL COMMENT '操作说明',
+
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+
+    KEY idx_operator_id (operator_id),
+    KEY idx_target_user_id (target_user_id),
+    KEY idx_action (action),
+    KEY idx_create_time (create_time)
+) COMMENT='审计日志表';

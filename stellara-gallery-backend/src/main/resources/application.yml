@@ -1,3 +1,4 @@
+# 后端服务端口与统一接口前缀。
 server:
   port: 8123
   servlet:
@@ -11,6 +12,7 @@ spring:
     url: jdbc:mysql://localhost:3306/stellara_gallery?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
     password: xmz725
+# MyBatis-Plus 基础配置：Mapper XML 路径、下划线转驼峰、逻辑删除规则。
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
   configuration:
@@ -20,11 +22,13 @@ mybatis-plus:
       logic-delete-field: isDelete
       logic-delete-value: 1
       logic-not-delete-value: 0
+# Swagger / OpenAPI 文档访问路径。
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
+# Sa-Token 登录态配置，当前使用 Cookie 模式配合前端 credentials: include。
 sa-token:
   token-name: stellara_token
   timeout: 2592000

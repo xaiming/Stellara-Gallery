@@ -6,8 +6,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+/**
+ * OpenAPI / Swagger 文档配置。
+ */
 public class OpenApiConfig {
 
+    /**
+     * 配置 Swagger / OpenAPI 文档的基础信息。
+     */
     @Bean
     public OpenAPI stellaraGalleryOpenApi() {
         return new OpenAPI()

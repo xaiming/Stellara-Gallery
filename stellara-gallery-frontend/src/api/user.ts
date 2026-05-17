@@ -18,6 +18,16 @@ export interface UserVO {
   updateTime?: string
 }
 
+export interface AuditLogVO {
+  id: number
+  operatorId?: number
+  operatorAccount?: string
+  targetUserId?: number
+  action: string
+  detail?: string
+  createTime?: string
+}
+
 export interface UserLoginRequest {
   userAccount: string
   userPassword: string
@@ -41,11 +51,23 @@ export interface UserQueryRequest {
   pageSize?: number
   sortField?: string
   sortOrder?: 'ascend' | 'descend'
+  keyword?: string
   id?: number
   userAccount?: string
   userName?: string
   userRole?: string
   userStatus?: number
+}
+
+export interface UserChangePasswordRequest {
+  oldPassword: string
+  newPassword: string
+  checkPassword: string
+}
+
+export interface UserResetPasswordRequest {
+  id: number
+  newPassword: string
 }
 
 export interface UserUpdateRequest {
@@ -139,6 +161,34 @@ export function updateUser(data: UserUpdateRequest) {
 
 export function updateMyUser(data: Omit<UserUpdateRequest, 'id'>) {
   return request<boolean>('/user/update/my', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export function deleteUser(id: number) {
+  return request<boolean>('/user/delete', {
+    method: 'POST',
+    body: JSON.stringify({ id }),
+  })
+}
+
+export function changeMyPassword(data: UserChangePasswordRequest) {
+  return request<boolean>('/user/password/change', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export function resetUserPassword(data: UserResetPasswordRequest) {
+  return request<boolean>('/user/password/reset', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export function listAuditLogs(data: { current?: number; pageSize?: number }) {
+  return request<PageResult<AuditLogVO>>('/user/audit/list/page', {
     method: 'POST',
     body: JSON.stringify(data),
   })
