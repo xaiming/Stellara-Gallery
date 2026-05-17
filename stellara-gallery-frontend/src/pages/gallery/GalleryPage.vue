@@ -32,6 +32,7 @@ const submitting = ref(false)
 const message = ref('')
 const uploadVisible = ref(false)
 const previewUrl = ref('')
+const MAX_UPLOAD_SIZE = 20 * 1024 * 1024
 
 const query = reactive<PictureQueryRequest>({
   current: 1,
@@ -111,8 +112,15 @@ const changePage = (delta: number) => {
 }
 
 const onFileChange = (event: Event) => {
-  const file = (event.target as HTMLInputElement).files?.[0]
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
   if (!file) {
+    return
+  }
+  if (file.size > MAX_UPLOAD_SIZE) {
+    message.value = '单张图片不能超过 20MB'
+    input.value = ''
+    uploadForm.file = null
     return
   }
   uploadForm.file = file

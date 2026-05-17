@@ -6,6 +6,7 @@ import com.xmz.stellaragallerybackend.common.BaseResponse;
 import com.xmz.stellaragallerybackend.common.ErrorCode;
 import com.xmz.stellaragallerybackend.common.ResultUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -41,6 +42,15 @@ public class GlobalExceptionHandler {
     public BaseResponse<?> notRoleExceptionHandler(NotRoleException e) {
         log.error("NotRoleException", e);
         return ResultUtils.error(ErrorCode.NO_AUTH_ERROR, ErrorCode.NO_AUTH_ERROR.getMessage());
+    }
+
+    /**
+     * 处理上传文件超限异常，避免大图上传时返回系统错误。
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public BaseResponse<?> maxUploadSizeExceededExceptionHandler(MaxUploadSizeExceededException e) {
+        log.warn("MaxUploadSizeExceededException", e);
+        return ResultUtils.error(ErrorCode.PARAMS_ERROR, "上传文件过大，单张图片最大 20MB");
     }
 
     /**

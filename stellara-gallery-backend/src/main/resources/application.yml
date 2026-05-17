@@ -6,6 +6,10 @@ server:
 spring:
   application:
     name: stellara-gallery-backend
+  servlet:
+    multipart:
+      max-file-size: ${STELLARA_UPLOAD_MAX_FILE_SIZE:20MB}
+      max-request-size: ${STELLARA_UPLOAD_MAX_REQUEST_SIZE:25MB}
   # 数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
