@@ -91,10 +91,10 @@ export interface UserAddRequest {
   userStatus?: number
 }
 
-const API_BASE = 'http://127.0.0.1:8123/api'
+export const API_BASE = 'http://127.0.0.1:8123/api'
 const LOGIN_USER_STORAGE_KEY = 'stellara-login-user'
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     credentials: 'include',
     headers: {

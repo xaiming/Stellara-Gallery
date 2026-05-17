@@ -94,7 +94,7 @@ const router = createRouter({
           meta: { title: '系统设置', subtitle: '这里将配置站点基础信息与系统参数。', requiresAdmin: true },
         },
         {
-          path: 'viewer',
+          path: 'viewer/:pictureId?',
           name: 'Viewer',
           component: PlaceholderPage,
           meta: { title: '观赏模式', subtitle: '这里将提供沉浸式图片浏览体验。' },

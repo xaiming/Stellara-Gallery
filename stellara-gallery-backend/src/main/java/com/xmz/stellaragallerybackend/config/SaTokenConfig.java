@@ -21,6 +21,8 @@ public class SaTokenConfig implements WebMvcConfigurer {
         registry.addInterceptor(new SaInterceptor(handle -> SaRouter.match("/**")
                         // 公开接口无需登录，便于用户拿到登录态或查看服务健康状态。
                         .notMatch("/user/login", "/user/register")
+                        .notMatch("/picture/get", "/picture/list/public/page", "/picture/download")
+                        .notMatch("/category/list/enabled", "/tag/list/enabled")
                         .notMatch("/health", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                         .check(r -> StpUtil.checkLogin())))
                 .addPathPatterns("/**");
