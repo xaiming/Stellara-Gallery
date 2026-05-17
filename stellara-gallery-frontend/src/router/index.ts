@@ -5,6 +5,7 @@ import LoginPage from '../pages/login/LoginPage.vue'
 import PlaceholderPage from '../pages/common/PlaceholderPage.vue'
 import UserAdminPage from '../pages/admin/UserAdminPage.vue'
 import ProfilePage from '../pages/profile/ProfilePage.vue'
+import MySpacePage from '../pages/space/MySpacePage.vue'
 import { cacheLoginUser, clearCachedLoginUser, getCachedLoginUser, getLoginUser } from '../api/user'
 
 const router = createRouter({
@@ -36,7 +37,7 @@ const router = createRouter({
         {
           path: 'space/my',
           name: 'MySpace',
-          component: PlaceholderPage,
+          component: MySpacePage,
           meta: { title: '我的空间', subtitle: '这里将展示个人空间、私有图片和创作合集。' },
         },
         {
