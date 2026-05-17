@@ -4,6 +4,7 @@ import GalleryPage from '../pages/gallery/GalleryPage.vue'
 import LoginPage from '../pages/login/LoginPage.vue'
 import PlaceholderPage from '../pages/common/PlaceholderPage.vue'
 import UserAdminPage from '../pages/admin/UserAdminPage.vue'
+import PictureAdminPage from '../pages/admin/PictureAdminPage.vue'
 import ProfilePage from '../pages/profile/ProfilePage.vue'
 import MySpacePage from '../pages/space/MySpacePage.vue'
 import { cacheLoginUser, clearCachedLoginUser, getCachedLoginUser, getLoginUser } from '../api/user'
@@ -67,7 +68,7 @@ const router = createRouter({
         {
           path: 'admin/picture',
           name: 'PictureAdmin',
-          component: PlaceholderPage,
+          component: PictureAdminPage,
           meta: { title: '图片管理', subtitle: '这里将提供图片审核、编辑和批量管理入口。', requiresAdmin: true },
         },
         {
